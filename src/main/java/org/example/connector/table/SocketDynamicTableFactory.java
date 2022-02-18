@@ -19,47 +19,24 @@ public class SocketDynamicTableFactory implements DynamicTableSourceFactory {
 
     private static final String IDENTIFIER = "socket";
 
-    // define all options statically
-    private static final ConfigOption<String> HOSTNAME = ConfigOptions.key("hostname")
-            .stringType()
-            .noDefaultValue()
-            .withDescription("主机IP");
-
-    private static final ConfigOption<Integer> PORT = ConfigOptions.key("port")
-            .intType()
-            .noDefaultValue()
-            .withDescription("The port of socket!!!");
-
-    private static final ConfigOption<Integer> BYTE_DELIMITER = ConfigOptions.key("byte-delimiter")
-            .intType()
-            .defaultValue(10)
-            .withDescription("默认换行符'\n'");
-
-    private static final ConfigOption<String> COLUMN_DELIMITER = ConfigOptions.key("column-delimiter")
-            .stringType()
-            .defaultValue(",")
-            .withDescription("列分隔符");
-
     @Override
     public DynamicTableSource createDynamicTableSource(Context context) {
         // either implement your custom validation logic here ...
         // or use the provided helper utility
         final FactoryUtil.TableFactoryHelper helper = FactoryUtil.createTableFactoryHelper(this, context);
-
         // validate all options
         helper.validate();
-
         // get the validated options
         final ReadableConfig options = helper.getOptions();
-        final String hostname = options.get(HOSTNAME);
-        final int port = options.get(PORT);
-        final byte byteDelimiter = (byte) (int) options.get(BYTE_DELIMITER);
-
+        final String hostname = options.get(SocketConfig.HOSTNAME);
+        final int port = options.get(SocketConfig.PORT);
+        final byte byteDelimiter = (byte) (int) options.get(SocketConfig.BYTE_DELIMITER);
+        final String columnDelimiter = options.get(SocketConfig.COLUMN_DELIMITER);
         // derive the produced data type (excluding computed columns) from the catalog table
         final DataType producedDataType = context.getCatalogTable().getSchema().toPhysicalRowDataType();
 
         // create and return dynamic table source
-        return new SocketDynamicTableSource();
+        return new SocketDynamicTableSource(hostname, port, byteDelimiter, columnDelimiter, producedDataType);
     }
 
     @Override
@@ -70,16 +47,16 @@ public class SocketDynamicTableFactory implements DynamicTableSourceFactory {
     @Override
     public Set<ConfigOption<?>> requiredOptions() {
         Set<ConfigOption<?>> options = new HashSet<>();
-        options.add(HOSTNAME);
-        options.add(PORT);
+        options.add(SocketConfig.HOSTNAME);
+        options.add(SocketConfig.PORT);
         return options;
     }
 
     @Override
     public Set<ConfigOption<?>> optionalOptions() {
         Set<ConfigOption<?>> options = new HashSet<>();
-        options.add(BYTE_DELIMITER);
-        options.add(COLUMN_DELIMITER);
+        options.add(SocketConfig.BYTE_DELIMITER);
+        options.add(SocketConfig.COLUMN_DELIMITER);
         return options;
     }
 }
